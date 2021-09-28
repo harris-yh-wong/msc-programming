@@ -1,17 +1,19 @@
 ---
-title: "Write-up"
+title: "7PAVITPR Introduction to Statistical Programming \nAssignment - R Part"
 author: "Yui Hang, Wong (Harris) \n K21115599"
 output: pdf_document
 ---
 
 # Library
 ```{r}
+#! Remove the suppression before submission
 suppressPackageStartupMessages(library(here))
 suppressPackageStartupMessages(library(tidyverse))
 library(haven)
 library(patchwork)
 ```
 
+\newpage
 # 1 Manipulating dataframes
 
 ## 1.1
@@ -26,6 +28,8 @@ ess <- ess_raw %>% select(
         idno, cntry, stfeco, gincdif, advbach, gndr, yrbrn,
         wkhtot, jbscr, mainact, hltherb
 )
+
+head(ess)
 ```
 
 ## 1.3
@@ -55,18 +59,21 @@ ess$age[1:10]
 
 ## 1.5
 ```{r}
-ess %>% 
-        summarise(
-                sd = sd(age, na.rm = T),
-                mean = mean(age, na.rm = T),
-                oldest = max(age, na.rm = T),
-                youngest = min(age, na.rm = T)
-        )
+f_list = list(
+        "sd" = sd,
+        "mean" = mean,
+        "oldest" = max,
+        "youngest" = min
+)
+
+ess %>% summarise(across(age, f_list, na.rm = T))
 ```
+
 
 ## 1.6
 ```{r}
 p1.6.1 <- ess %>% 
+        drop_na(age) %>% 
         ggplot(aes(x = age)) +
         geom_histogram(bins = 30)
 
@@ -78,9 +85,8 @@ p1.6.2
 
 ## 1.7
 ```{r}
-#! how to treat NA?
-ess <- ess %>% 
-        mutate(female = as.numeric(gender == 2))
+#! NA treatment?
+ess <- ess %>% mutate(female = as.numeric(gender == 2))
 ```
 
 ## 1.8
@@ -92,18 +98,26 @@ ess <- ess %>%
 ## 1.9
 ```{r}
 #! there must be a simpler way!
-ess %>% 
-        count(work_over_50h) %>%
-        mutate(prop = n/sum(n)) %>% 
-        filter(work_over_50h)
 
+
+# Tabulate
+counts <- ess %>% count(work_over_50h)
+counts
+
+# overall proportion
+porportions <- counts %>% mutate(prop = n/sum(n))
+porportions
+
+porportions %>% 
+        filter(work_over_50h) %>% 
+        pull(prop)
 
 ess %>% 
         group_by(country) %>% 
         count(work_over_50h) %>% 
         mutate(prop = n / sum(n)) %>% 
-        filter(work_over_50h)
-        
+        filter(work_over_50h) %>% 
+        select(country, prop)
         
         
 ```
@@ -124,21 +138,25 @@ bycountry <- ess %>%
         select(country, prop) %>% 
         rename(seekdoctor = prop) %>% 
         ungroup()
+
+head(bycountry)
 ```
 
 ## 1.12
 ```{r}
 load(here("data", "health.Rdata"))
 
-health_long <- health %>% 
-        pivot_longer(
-                cols = -measure,
-                names_to = "cntry"
-        ) %>% 
-        tidyr::separate(measure, into = c(NA, "feature", "year"), sep = "_") %>% 
+health_long <- health %>%
+        pivot_longer(cols = -measure,
+                     names_to = "cntry") %>%
+        tidyr::separate(measure,
+                        into = c(NA, "feature", "year"),
+                        sep = "_") %>%
         pivot_wider(names_from = "feature",
-                    values_from = "value") %>% 
+                    values_from = "value") %>%
         rename(healthspend = pcexhe, doctors = phyrape)
+
+head(health_long)
 ```
 
 ## 1.13
@@ -150,12 +168,16 @@ merged <- health_long %>%
         select(-year) %>% 
         full_join(bycountry, by = c("cntry" = "country"))
 
+kable(merged)
+
 merged %>% 
-        summarise(
-                both = sum(!is.na(healthspend) & !is.na(doctors) & !is.na(seekdoctor)),
-                only_left = sum(!is.na(healthspend) & !is.na(doctors)),
-                only_right = sum(!is.na(seekdoctor))
-        )
+        transmute(
+                only_left = !is.na(healthspend) & !is.na(doctors),
+                only_right = !is.na(seekdoctor),
+                both = only_left & only_right
+        ) %>% 
+        summarise(across(everything(), sum))
+
 
 
 ```
@@ -168,7 +190,7 @@ p1.14 <- merged %>%
         ggplot2::stat_smooth(method = "lm", se = F) +
         labs(title = "National expenditure on healthcare per capita \nagainst the proportion of people who report going to a doctor/nurse ﬁirst \n in the event they experience serious backache in European countries",
              x = "National expenditure on healthcare per capita",
-             y = "The proportion of people who report going to a doctor/nurse first \n in the event they experience serious backache ")
+             y = "The proportion of people who report going to a doctor/nurse first \nin the event they experience serious backache ")
 p1.14
 ```
 
@@ -184,7 +206,6 @@ n.seq <- c(100, 200, 10^3, 10^4, 10^5)
 ```{r}
 samples <- n.seq %>% 
         map(rnorm, mean = 0, sd = 1)
-
 # A list can be used to store vectors of different lengths.
 ```
 
