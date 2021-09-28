@@ -1,0 +1,89 @@
+---
+title: "R_practical_2.Rmd"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+library(memoise)
+```
+# Assignment, objects, subsetting
+
+## Vectors
+
+```{r}
+#1
+m <- month.name
+#2
+m[3]
+m[6:8]
+m %>% tail(5)
+m %>% .[stringr::str_ends(., "er")]
+m %>% .[stringr::str_starts(., "A")]
+```
+
+## Dataframes
+```{r}
+# 1
+?data
+data("iris")
+
+# 2
+colnames(iris)[1]
+waldo::compare(
+  iris["Sepal.Length"],
+  iris[1]
+)
+
+# 3
+waldo::compare(
+  iris[[3]],
+  iris[3]
+)
+class(iris[[3]])
+class(iris[3])
+# df[[index]] returns a dataframe column, df[3] returns a vector
+
+# 4
+iris <- iris %>% mutate(Total.Length = Sepal.Length + Petal.Length)
+# 5
+iris <- iris %>% mutate(Species = stringr::str_to_upper(Species))
+```
+
+
+# 2 Functions and conditionals
+```{r}
+greeting <- function(salutation) {
+    if (salutation == "hello") return("hello")
+    if (salutation == "bonjour") return("bonjour")
+    if (salutation == "hola") return("hola")
+}
+
+greeting("hello")
+```
+
+```{r}
+myfactorial <- function(n) {
+  if (n == 1) return(1)
+  return(myfactorial(n-1)*n)
+}
+
+myfactorial_memo <- memoise(myfactorial)
+
+
+rs100 <- bench::mark(
+  myfactorial(100),
+  myfactorial_memo(100)
+)
+
+rs200 <- bench::mark(
+  myfactorial(150),
+  myfactorial_memo(150)
+)
+
+View(rs100)
+View(rs200)
+```
+
+
+
