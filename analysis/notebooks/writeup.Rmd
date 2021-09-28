@@ -1,0 +1,283 @@
+---
+title: "Write-up"
+author: "Yui Hang, Wong (Harris) \n K21115599"
+output: pdf_document
+---
+
+# Library
+```{r}
+suppressPackageStartupMessages(library(here))
+suppressPackageStartupMessages(library(tidyverse))
+library(haven)
+library(patchwork)
+```
+
+# 1 Manipulating dataframes
+
+## 1.1
+```{r}
+file <- here("data", "ESS.sav")
+ess_raw <- haven::read_sav(file)
+```
+
+## 1.2
+```{r}
+ess <- ess_raw %>% select(
+        idno, cntry, stfeco, gincdif, advbach, gndr, yrbrn,
+        wkhtot, jbscr, mainact, hltherb
+)
+```
+
+## 1.3
+```{r}
+ess <- ess %>% rename(
+        idno = idno,
+        country = cntry,
+        satisfied_econ = stfeco,
+        reduce_diff = gincdif,
+        first_if_backache = advbach,
+        gender = gndr,
+        yob = yrbrn,
+        working_hours = wkhtot,
+        job_secure = jbscr,
+        main_activity = mainact,
+        herbal_remedies = hltherb
+)
+```
+
+## 1.4
+```{r}
+year_of_collection <- 2004
+ess <- ess %>% mutate(age = year_of_collection - yob) 
+
+ess$age[1:10]
+```
+
+## 1.5
+```{r}
+ess %>% 
+        summarise(
+                sd = sd(age, na.rm = T),
+                mean = mean(age, na.rm = T),
+                oldest = max(age, na.rm = T),
+                youngest = min(age, na.rm = T)
+        )
+```
+
+## 1.6
+```{r}
+p1.6.1 <- ess %>% 
+        ggplot(aes(x = age)) +
+        geom_histogram(bins = 30)
+
+p1.6.2 <- p1.6.1 + facet_wrap(~country)
+
+p1.6.1
+p1.6.2
+```
+
+## 1.7
+```{r}
+#! how to treat NA?
+ess <- ess %>% 
+        mutate(female = as.numeric(gender == 2))
+```
+
+## 1.8
+```{r}
+ess <- ess %>% 
+        mutate(work_over_50h = working_hours  > 50)
+```
+
+## 1.9
+```{r}
+#! there must be a simpler way!
+ess %>% 
+        count(work_over_50h) %>%
+        mutate(prop = n/sum(n)) %>% 
+        filter(work_over_50h)
+
+
+ess %>% 
+        group_by(country) %>% 
+        count(work_over_50h) %>% 
+        mutate(prop = n / sum(n)) %>% 
+        filter(work_over_50h)
+        
+        
+        
+```
+
+## 1.10
+```{r}
+ess <- ess %>%
+        mutate(first_if_backache = as.numeric(first_if_backache %in% 4:5))
+```
+
+## 1.11
+```{r}
+bycountry <- ess %>% 
+        group_by(country) %>% 
+        count(first_if_backache) %>% 
+        mutate(prop = n / sum(n)) %>% 
+        filter(first_if_backache == 1) %>% 
+        select(country, prop) %>% 
+        rename(seekdoctor = prop) %>% 
+        ungroup()
+```
+
+## 1.12
+```{r}
+load(here("data", "health.Rdata"))
+
+health_long <- health %>% 
+        pivot_longer(
+                cols = -measure,
+                names_to = "cntry"
+        ) %>% 
+        tidyr::separate(measure, into = c(NA, "feature", "year"), sep = "_") %>% 
+        pivot_wider(names_from = "feature",
+                    values_from = "value") %>% 
+        rename(healthspend = pcexhe, doctors = phyrape)
+```
+
+## 1.13
+```{r}
+year_of_collection <- 2004
+
+merged <- health_long %>% 
+        filter(year == year_of_collection) %>% 
+        select(-year) %>% 
+        full_join(bycountry, by = c("cntry" = "country"))
+
+merged %>% 
+        summarise(
+                both = sum(!is.na(healthspend) & !is.na(doctors) & !is.na(seekdoctor)),
+                only_left = sum(!is.na(healthspend) & !is.na(doctors)),
+                only_right = sum(!is.na(seekdoctor))
+        )
+
+
+```
+
+## 1.14
+```{r}
+p1.14 <- merged %>% 
+        ggplot(aes(x = healthspend, y = seekdoctor)) +
+        geom_point() +
+        ggplot2::stat_smooth(method = "lm", se = F) +
+        labs(title = "National expenditure on healthcare per capita \nagainst the proportion of people who report going to a doctor/nurse ﬁirst \n in the event they experience serious backache in European countries",
+             x = "National expenditure on healthcare per capita",
+             y = "The proportion of people who report going to a doctor/nurse first \n in the event they experience serious backache ")
+p1.14
+```
+
+
+# 2 Random Numbers, Skewness and Kurtosis
+
+## 2.1
+```{r}
+n.seq <- c(100, 200, 10^3, 10^4, 10^5)
+```
+
+## 2.2
+```{r}
+samples <- n.seq %>% 
+        map(rnorm, mean = 0, sd = 1)
+
+# A list can be used to store vectors of different lengths.
+```
+
+## 2.3
+```{r}
+plot_histo <- function(x, title = NULL) {
+        p <- x %>% 
+                as.data.frame() %>% 
+                ggplot(aes(x = x)) +
+                geom_histogram(bins = 30) +
+                labs(title = title)
+        return(p)
+}
+
+plot_histo_panel <- function(distributions, titles) {
+        plot_list <- map2(
+                .x = distributions,
+                .y = titles,
+                .f = plot_histo
+        ) 
+        pw <- plot_list %>% patchwork::wrap_plots(nrow = 1)
+        return(pw)
+}
+
+titles <- as.character(n.seq)
+p2.3 <- plot_histo_panel(samples, titles)
+p2.3
+```
+
+## 2.4
+```{r}
+#! central limit theorem? How to describe?
+```
+
+## 2.5
+```{r}
+bimodal <- c(
+        rnorm(mean = 0, sd = 1, n = 10000),
+        rnorm(mean = 4, sd = 1, n = 10000)
+        )
+p2.5 <- plot_histo(bimodal)
+p2.5
+```
+## 2.6
+```{r}
+trimodal <- c(
+        rnorm(mean = -4, sd = 1, n = 10000),
+        rnorm(mean = 0,  sd = 1, n = 10000),
+        rnorm(mean = 4,  sd = 1, n = 10000)
+        )
+p2.6 <- plot_histo(trimodal)
+p2.6
+```
+
+## 2.7
+```{r}
+right_skewed <- c(
+        rnorm(mean = 0, sd = 1, n = 1000),
+        rnorm(mean = 2, sd = 2, n = 1000)
+)
+left_skewed <- -right_skewed
+
+skewed_distributions <- list(left_skewed, right_skewed)
+
+titles <- c("Left-skewed", "Right-skewed")
+plot_histo_panel(skewed_distributions, titles)
+
+skewed_distributions %>% 
+        map_dbl(e1071::skewness)
+
+
+```
+
+## 2.8
+```{r}
+leptokurtic <- c(
+        rnorm(10000, mean = 0, sd = 1),
+        rnorm(100, mean = 5,  sd = 1),
+        rnorm(100, mean = 10, sd = 1)
+)
+platykurtic <- c(
+        rnorm(10000, mean = 0, sd = 1),
+        rnorm(10000, mean = 0, sd = 2)
+        )
+
+kurtosis_distributions <- list(leptokurtic, platykurtic)
+
+titles <- kurtosis_distributions %>% map(e1071::kurtosis)
+p2.8 <- plot_histo_panel(kurtosis_distributions, titles)
+p2.8
+```
+
+
+
+
+
