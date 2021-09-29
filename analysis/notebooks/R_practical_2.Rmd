@@ -63,8 +63,11 @@ greeting("hello")
 ```
 
 ```{r}
+
 myfactorial <- function(n) {
-  if (n == 1) return(1)
+  if (x%%1==0) stop("Only accepts integers")
+  if (x < 0) stop("Factorials are only well-defined for non-negative integers.")
+  if (n %in% c(0, 1)) return(1)
   return(myfactorial(n-1)*n)
 }
 
@@ -84,6 +87,7 @@ rs200 <- bench::mark(
 View(rs100)
 View(rs200)
 ```
+
 
 
 
