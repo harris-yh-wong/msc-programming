@@ -1,0 +1,37 @@
+---
+title: "R_practical_2.Rmd"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+library(here)
+```
+
+# 1 import
+```{r}
+movies <- read_csv(here("data", "movies.csv"))
+ratings <- read_csv(here("data", "ratings.csv"))
+```
+
+# 2 merged
+```{r}
+#! right join?
+
+merged <- right_join(movies, ratings, by = "movieId")
+dim(merged)
+```
+
+# 3 mean
+```{r}
+scores <- merged %>% 
+        group_by(movieId) %>% 
+        summarise(mean_rating = mean(rating))
+scores
+```
+
+# 4
+```{r}
+
+```
+
