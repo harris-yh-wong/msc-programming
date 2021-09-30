@@ -138,6 +138,8 @@ scatterplot(y1.2 ~ x1, col = "red3", smooth = F)
 ```
 
 # Non-linear relationships
+
+#! the quadratic term is missing. Does not work as intended
 ```{r}
 sqrt(2) ^ 2 == 2
 sprintf("%.99f", sqrt(2) ^ 2)
