@@ -4,8 +4,8 @@ output: pdf_document
 ---
 
 ```{r}
+# library(here)
 library(tidyverse)
-library(here)
 ```
 
 # 1 import
@@ -14,17 +14,17 @@ movies <- read_csv(here("data", "movies.csv"))
 ratings <- read_csv(here("data", "ratings.csv"))
 ```
 
-# 2 merged
+# 2 merge
 ```{r}
 #! right join?
 
-merged <- right_join(movies, ratings, by = "movieId")
-dim(merged)
+av <- inner_join(movies, ratings, by = "movieId")
+dim(av)
 ```
 
-# 3 mean
+# 3 mean ratings
 ```{r}
-scores <- merged %>% 
+scores <- av %>% 
         group_by(movieId) %>% 
         summarise(mean_rating = mean(rating))
 scores
@@ -32,6 +32,108 @@ scores
 
 # 4
 ```{r}
+myrange <- function(x, ...) {
+        min_max <- range(x, ...)
+        return(min_max[2]-min_max[1])
+}
+scores$mean_rating %>% myrange
+```
+# 5
+```{r}
 
+av %>% 
+        filter(rating == max(rating)) %>% 
+        summarise(n = length(unique(movieId)))
+```
+
+# 6
+```{r}
+av <- av %>%
+    mutate(year = str_extract(title, "[0-9]{4}.$"),
+           year = parse_number(year)) %>%
+    drop_na(year)
+```
+
+# detour
+```{r}
+df <- av %>%
+        group_by(year, movieId)
+
+%>%
+        summarise(rating.mean = mean(rating), .groups = "drop")
+
+bp <- df %>%
+        ggplot(aes(x = year, y = rating.mean)) +
+        geom_point()
+
+pdf(here("output.pdf"), width = 30, height = 20)
+print(boxplot)
+invisible(dev.off())
+
+```
+
+
+
+
+
+# Linear Relationships in R (Experimentation)
+
+```{r}
+require(car)
+seed <- 0
+n <- 1000
+
+
+set.seed(seed)
+x1 <- rnorm(n, mean = 0, sd = 1)
+
+intercept <- 0
+slope <- 1
+
+# The two expressions y1 and y1.2 are the same!!!
+set.seed(seed)
+y1 <- intercept + slope * x1 + rnorm(n, mean = 0, sd = 1)
+
+set.seed(seed)
+y1.2 <- rnorm(n, 
+              mean = intercept + slope * x1, 
+              sd = 1)
+waldo::compare(y1, y1.2)
+car::scatterplot(y1 ~ y1.2, smooth = F)
+```
+
+
+```{r}
+#1 
+hist(x1)
+
+#2 
+car::scatterplot(x1 ~ y1, col = "red3", smooth = F)
+
+#3
+y2 <- rnorm(n, mean = 0, sd = 1/10)
+car::scatterplot(x1 ~ y2, col = "red3", smooth = F)
+
+```
+
+```{r}
+require(car)
+seed <- 0
+
+set.seed(seed + 1)
+x1 <- rnorm(n)
+hist(x1)
+
+set.seed(seed)
+y1.1 <- 0 + 1 * x1 + rnorm(n, mean = 0, sd = 1)
+set.seed(seed)
+y1.2 <- rnorm(n,
+            mean = 0 + 1 * x1,
+            sd = 1)
+
+# Plots
+scatterplot(y1.1 ~ x1, col = "red3", smooth = F)
+scatterplot(y1.1 ~ y1.2, col = "red3", smooth = F)
+scatterplot(y1.2 ~ x1, col = "red3", smooth = F)
 ```
 
