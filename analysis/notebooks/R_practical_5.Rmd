@@ -1,0 +1,195 @@
+---
+title: "R Notebook"
+output: pdf_document
+---
+
+# 1 Introduction
+
+# 2 Acessing data on air polution
+
+## 2.1 Libraries
+```{r}
+suppressPackageStartupMessages(library(here))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(openair))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(skimr))
+```
+
+## 2.2 Download
+
+```{r}
+# Marylebone Road
+mb <- importAURN(site = "my1", 
+                 year = 2016:2021,
+                 pollutant = "nox")
+
+# Lavender Hill, Clapham
+lh <- importKCL("WAC",
+                year = 2016:2021,
+                pollutant = "nox")
+```
+
+## 2.3 Skim
+
+```{r}
+# mb
+skim(mb)
+# lh
+skim(lh)
+```
+
+How many rows and columns do they contain?
+
+```{r}
+DFs <- list("mb" = mb, "lh" = lh)
+
+DFs %>% 
+        map(skimr::skim)
+```
+Check missing data
+```{r}
+DFs %>% 
+        map(function(df) df %>% 
+                    summarise(across(everything(), naniar::pct_miss))) %>% 
+        bind_rows(.id = "dataset") # only because the column names are the same
+```
+Plot as scatter
+
+```{r}
+scatters <- DFs %>% 
+        map(function(df) (df %>%
+                  ggplot(aes(x = as_date(date),
+                             y = nox,
+                             color = nox)) +
+                  geom_point() +
+                  scale_color_viridis_c() +
+                  scale_x_date() +
+                  labs(x = "Date",
+                       y = "NOx")
+        )
+        )
+
+scatters
+
+```
+
+# 3 Reshape and merge the data
+
+## 3.1 Combine the dataframes
+```{r}
+dat <- DFs %>% bind_rows()
+```
+
+## 3.2 
+Selecting a single hour to represent each week
+e.g. 3pm, Monday
+Then select a single hourly estimate per month
+
+```{r}
+wday_whitelist <- 1 # monday
+hour_whitelist <- 15 # 3pm 
+
+filtered <- dat %>% 
+        filter(
+                lubridate::wday(date) == wday_whitelist &
+                lubridate::hour(date) == hour_whitelist
+        )
+        
+    
+```
+
+# 4 Plot monthly levels of NOx
+
+Setup
+```{r}
+# filtered <- filtered %>% 
+#         mutate(
+#                 wday = lubridate::wday(date, label = T),
+#                 hour = lubridate::hour(date)
+#         )
+filtered <- filtered %>% mutate(date = as_date(date))
+```
+
+## 4.1 Create a scatter plot using the combined data for all sites.
+```{r}
+p4.1 <- filtered %>% 
+        ggplot(aes(x = date, y = nox, col = site)) +
+        geom_point()
+p4.1
+```
+
+## 4.2 Add a smoothed line for each site to the plot (i.e. geom_smooth).
+```{r}
+p4.2 <- p4.1 + geom_smooth(se = F)
+p4.2
+```
+## 4.3 Draw a vertical line at 8th April, 2019 (the date the ULEZ was introduced). Make the line green.
+```{r}
+p4.3 <- p4.2 + geom_vline(xintercept = lubridate::ymd("2019-04-08"), col = "green", size = 1)
+p4.3
+```
+
+## 4.4 Add a label next to the vertical line with the text “April 2019: ULEZ introduction”.
+```{r}
+p4.4 <- p4.3 + annotate(geom="text", label = "April 2019:\nULEZ introduction", 
+                        x = lubridate::ymd("2019-04-08"), y = Inf, 
+                        hjust = -0.1, vjust = 1)
+p4.4
+```
+## 4.5 Give the plot an appropriate title.
+```{r}
+p4.5 <- p4.4 + labs(title = "Monthly levels of NOx in London before and after ULEZ")
+p4.5
+```
+## 4.6 Label the x-axis and y-axis.
+```{r}
+p4.6 <- p4.5 + labs(
+        x = "Date",
+        y = "Oxides of nitrogen concentration (ppb)"
+)
+p4.6
+```
+
+## 4.7 Add a caption that explains where the source of these data.
+```{r}
+p4.7 <- p4.6 + labs(
+        caption = "Data Source: \nCarslaw, D. C. and K. Ropkins, (2012) openair --- an R package for air quality data analysis.\nEnvironmental Modelling & Software. Volume 27-28, 52-61."
+) + 
+        theme(plot.caption = element_text(hjust = 0))
+p4.7
+```
+## 4.8 Save your plot using ggsave as a PNG image.
+```{r}
+
+```
+
+## 4.9 How would you summarise trends in air pollution at these two sites?
+
+- What influence did the ULEZ introduction have?
+
+
+- What subsequent analyses might you conduct to answer this question?
+Build a shiny app... maybe?
+
+# 5 Consider sites outside of London 
+Listing the available sites
+```{r}
+aurn_meta <- openair::importMeta(source = "aurn")
+```
+
+6 Explore other ways of summarising the hourly data (Optional)
+
+Using a single monthly value to summarise trends in air pollution is not ideal. Let’s try an alternative.
+
+Using the combined dataset (comprising mb and lh), create a new dataset storing the median value of NOx per month for each site.
+
+Plot the median monthly value using geom_point and geom_line.
+
+Repeat this process, but this time calculate the cumulative total for of NOx for the last Friday of each month.
+
+(i.e. add up all values of NOx for the last Friday in each month, for each site.)
+
+What are the limitations of summarising the data this way? What other strategies might you consider?
+
+If you have time, review Chapter 10 of this book. Later chapters, showing alternative ways of summarising the openair data, may also be of interest.
