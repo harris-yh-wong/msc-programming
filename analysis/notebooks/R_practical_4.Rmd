@@ -1,0 +1,39 @@
+---
+title: "R Notebook"
+output: pdf_document
+---
+
+```{r}
+library(tidyverse)
+library(car)
+```
+
+
+```{r}
+sqrt(2) ^ 2 == 2
+sprintf("%.99f", sqrt(2) ^ 2)
+
+# Intercepts
+
+# Random seed, and sample size
+set.seed(0)
+n <- 1000
+
+# Standard amount of noise; SD = 1
+x1 <- rnorm(n) # IV
+e  <- rnorm(n) # Errors.
+y1 <- 2 * 1 - 3 * x1 + e # DV
+
+scatterplot(y1 ~ x1,
+            col = "red3",
+            smooth = FALSE)
+
+X <- model.matrix(lm(y1 ~ x1))
+y1 == X %*% c(2, -3) + e
+
+# Plots
+scatterplot(y1 ~ x1,
+            col = "red3",
+            smooth = FALSE)
+```
+
