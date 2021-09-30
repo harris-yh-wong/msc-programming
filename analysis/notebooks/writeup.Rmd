@@ -197,6 +197,11 @@ p1.14
 
 # 2 Random Numbers, Skewness and Kurtosis
 
+## set seed
+```{r}
+set.seed(0)
+```
+
 ## 2.1
 ```{r}
 n.seq <- c(100, 200, 10^3, 10^4, 10^5)
