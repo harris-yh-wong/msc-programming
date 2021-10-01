@@ -1,6 +1,7 @@
 ---
 title: "7PAVITPR Introduction to Statistical Programming \nAssignment - R Part"
-author: "Yui Hang, Wong (Harris) \n K21115599"
+author: "Yui Hang, Wong (Harris)\nK21115599"
+date: "Compiled: `r format(Sys.time(), '%Y-%m-%d')`"
 output:
   html_document:
     df_print: paged
@@ -8,7 +9,6 @@ output:
 
 # Library
 ```{r}
-#! Remove the suppression before submission
 suppressPackageStartupMessages(library(here))
 suppressPackageStartupMessages(library(tidyverse))
 suppressPackageStartupMessages(library(haven))
@@ -71,7 +71,6 @@ f_list = list(
 
 ess %>% summarise(across(age, f_list, na.rm = T))
 ```
-
 
 ## 1.6
 ```{r}
@@ -220,7 +219,10 @@ samples <- n.seq %>%
 A list can be used to store vectors of different lengths.
 
 ## 2.3
+
+Helper plotting functions
 ```{r}
+#' Plot a histogram of distribution from a numeric vector using ggplot
 plot_histo <- function(x, title = NULL) {
         p <- x %>% 
                 as.data.frame() %>% 
@@ -230,6 +232,8 @@ plot_histo <- function(x, title = NULL) {
         return(p)
 }
 
+#' Call plot_histo to produce a list of ggplot objects, 
+#' then wrap the objects into a 1-row panel using patchwork
 plot_histo_panel <- function(distributions, titles) {
         plot_list <- map2(
                 .x = distributions,
@@ -239,7 +243,9 @@ plot_histo_panel <- function(distributions, titles) {
         pw <- plot_list %>% patchwork::wrap_plots(nrow = 1)
         return(pw)
 }
+```
 
+```{r}
 titles <- as.character(n.seq)
 p2.3 <- plot_histo_panel(samples, titles)
 p2.3
@@ -247,6 +253,7 @@ p2.3
 
 ## 2.4
 
+The histograms show the Central Limit Theorem, in that as the sample size increases and approaches infinity, the distribution () of
 #! central limit theorem? The law of large numbers? How to describe?
 
 ## 2.5
@@ -258,6 +265,7 @@ bimodal <- c(
 p2.5 <- plot_histo(bimodal)
 p2.5
 ```
+
 ## 2.6
 ```{r}
 trimodal <- c(
@@ -275,17 +283,21 @@ right_skewed <- c(
         rnorm(mean = 0, sd = 1, n = 1000),
         rnorm(mean = 2, sd = 2, n = 1000)
 )
-left_skewed <- -right_skewed
+left_skewed <- c(
+        rnorm(mean = 2, sd = 2, n = 1000),
+        rnorm(mean = 0, sd = 1, n = 1000)
+)
 
-skewed_distributions <- list(left_skewed, right_skewed)
+skewed_distributions <- list(
+        "Left-skewed" = left_skewed, 
+        "Right-skewed" = right_skewed
+)
 
-titles <- c("Left-skewed", "Right-skewed")
+titles <- names(skewed_distributions)
 plot_histo_panel(skewed_distributions, titles)
 
 skewed_distributions %>% 
         map_dbl(e1071::skewness)
-
-
 ```
 
 ## 2.8
@@ -300,9 +312,15 @@ platykurtic <- c(
         rnorm(10000, mean = 0, sd = 2)
         )
 
-kurtosis_distributions <- list(leptokurtic, platykurtic)
+kurtosis_distributions <- list(
+        "Leptokurtotic" = leptokurtic, 
+        "Platykurtic"   = platykurtic
+)
 
-titles <- kurtosis_distributions %>% map(e1071::kurtosis)
+titles <- kurtosis_distributions %>% 
+        map(e1071::kurtosis) %>% 
+        map_chr(function(x) paste("Kurtosis:", x))
+
 p2.8 <- plot_histo_panel(kurtosis_distributions, titles)
 p2.8
 ```
