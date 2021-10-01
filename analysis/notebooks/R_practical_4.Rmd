@@ -3,12 +3,7 @@ title: "R Notebook"
 output: pdf_document
 ---
 
-```{r}
-suppressPackageStartupMessages(library(tidyverse))
-suppressPackageStartupMessages(library(broom))
-suppressPackageStartupMessages(library(car))
-```
-
+# Motivations
 
 - The core motivation: How do we describe the data
 
@@ -16,87 +11,88 @@ suppressPackageStartupMessages(library(car))
 e.g. we can use lm to associate number of cigarettes smoked per day against risk of lung cancer
 but when we try to communicate the findings (to the public) then 
 
-- this practical gives you a stronger ground to suggest that dichomizing a variable is a choice that can be considered with its own advantages (and obviously its limitations by throwing information away).
+- this practical gives you a stronger ground to suggest that dichomizing a variable is a probably a choice with substantial limitations (conceptually obvious because information is being thrown away). For example, a common way is to use median dichotomization, meanining that the population is categorized into two categories below or above the population median.
 
-e.g. MEDIAN DICHOMIZATION of a continuous variable
-
-- we are running a two-factor simulation: 
+- in each exercise we run a 'two-factor' simulation: 
 factor 1: a continuous IV --> run simulations
 factor 2: a discrete IV   --> run simulations again
-compare the results
+then we compare the results
 
+
+# Libraries
+```{r}
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(broom))
+suppressPackageStartupMessages(library(car))
+```
 
 
 # Exercise 1: Simulation with Continuous DV
 
 ## 1.1 Continuous DV and Continuous IVs (factor 1)
 
+
+
+
+
+Helper functions
 ```{r}
-# 1.1.1 set seed
-set.seed(0)
-
-# 1.1.2 Define simulation params
-n <- 5
-r <- 3 # number of monte carlo simulations
-k <- 2  # number of predictors
-
-Beta.sd <- 1 # sd for the slope coefficient (i.e. Beta)
+#' Helper. Append item to the end of list
+lappend <- function(l, x) {
+        l[[length(l)+1]] <- x
+}
 ```
 
+Main loop
 ```{r}
-### 1.1.3 Init vector
-### This vector is the result form each simulation
-### For each simulation, we look 
-nSignifIters <- vector(mode = "numeric", length = r)
+#' Main function to loop over simulations
+#' @param r integer. Number of monte carlo simulations
+run_MC <- function(r, fun_simulation, ...) {
+        outputs <- vector(mode = "list", length = r)
+        for (simulation in 1:r) {
+                out <- fun_simulation(...)
+                outputs[[simulation]] <- out
+        }
+        return(outputs)
+}
+```
 
-### 1.1.4 Monte carlo main loop
 
-for (simulation in 1:r) {
-        
-        print(paste("loop", simulation))
-        
+```{r}
+#' Function Factory to produce a simulation function that 
+#' simulates continuous DV; fits a linear model; 
+#' 
+#' Simulate a dataset 
+#' @param k. integer. Number of predictors
+#' @param n integer. Number of observations
+
+simulate <- function(k, n, Beta.sd = 1) {
         ### 1.1.5 
         ### Generate the IVs: These should all be stored in a data.frame. 
         ### Each IV is a random vector of n observations, generated using rnorm.
         
-        # init empty dataframe
-        X <- matrix(0, nrow = n, ncol = k)
-        
-        # generate IV
-        for (iv in 1:k) {
+        X <- matrix(0, ncol = k, nrow = n) # init
+        for (iv in 1:k) { # generate IV
                 X[,iv] <- rnorm(n)
         }
-        
-        print(X)
         
         ### 1.1.6
         ### Combine the IVs in a linear fashion, 
         ### with respect to a randomly-generated set of k coefficients, 
         ###   plus an error term.
         
-        Beta <- rnorm(k, mean = 0, sd = Beta.sd)
-        Y <- vector("numeric", n) 
-        #! here we implicitly set the intercept to be zero,
-        #  that's why later when we do a t.test,
-        #  where H0 of intercept's estimate == 0,
-        #  then the intercept should always be stat insignfiicant
-
-        # effects of DV
-        for (iv in 1:k) {
-                Y <- Y + Beta[iv] * X[,iv]
-        }
-        
-        Y2 <- rowSums(X * Beta) # automatically multiples each row with Beta
-        waldo::compare(Y, Y2) %>% print
-        # 
-        # Epsilon <- rnorm(n)
-        # Y <- Y + Epsilon # add Epsilon
+        #! Implicitly, the intercept is set to be 0
+        Epsilon <- rnorm(n, mean = 0, sd = 1)
+        Beta    <- rnorm(k, mean = 0, sd = Beta.sd)
+        Y <- X %*% Beta + Epsilon  # matrix multiplication operator
+        colnames(Y) <- "Y"
         
         ### 1.1.7
         ### Combine the IVs and DV into a data frame, 
         ### and fit a linear model with respect to all the IVs.
         
         XY <- cbind(X, Y) %>% data.frame()
+        
         Mod <- lm(Y ~ ., data = XY)
         
         ### 1.1.8
@@ -104,18 +100,59 @@ for (simulation in 1:r) {
         ### have a p-value less or equal than 0.001, 
         ### and store this number into your container.
         
-        Fit <- broom::tidy(Mod)
-        nSignifIter <- Fit %>% 
+        nSignifIter <- extract_nSignifIter(Mod)
+        
+        return(list(
+                "dat" = XY, 
+                "mod" = Mod, 
+                "nSignifIter" = nSignifIter)
+       )
+}
+
+
+
+extract_nSignifIter <- function(mod) {
+        fit <- broom::tidy(mod)
+        nSignifIter <- fit %>% 
                 filter(p.value <= 0.001) %>% 
                 nrow()
-        
-        
-        nSignifIters[simulation] <- nSignifIter
+        return(nSignifIter)
 }
 ```
 
+```{r}
+
+# 1.1.1 set seed
+set.seed(0)
+rs <- run_MC(100, simulate, n = 100, k = 10)
+nested <- rs %>% 
+        do.call(rbind, .) %>% 
+        as_tibble() %>% 
+        mutate(nSignifIter = unlist(nSignifIter))
+# 
+# nested %>% pull(dat) %>% map(as.matrix) %>% .[1:3] %>% 
+#         walk(function(mat) heatmap(mat, Rowv = NA, Colv = NA))
+```
+
+
 
 ```{r}
+### 1.1.3 Init vector
+### This vector is the result form each simulation
+### For each simulation, we look 
+
+
+### 1.1.4 Monte carlo main loop
+
+
+```
+
+## 1.2 Continuous DV and Continuous IVs, dichotomized (factor 2)
+
+In question 1.2, you can re-run all the above steps, except that we will dichotomize the IVs, at the median value, in order to compare the number of significant predictors obtained when we have used continuous, rather than discrete IVs. Your code for 1.2 should be exactly the same as 1.1, except that in step 5, the IVs are first generated randomly using rnorm, and then dichotomize at the median value, to produce a vector of 0's and 1's. 
+
+```{r}
+
 ```
 
 
