@@ -1,0 +1,270 @@
+----------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\Harris\projects\asmhi_programming\analysis/do/stata_practical_3.log
+  log type:  text
+ opened on:   6 Oct 2021, 21:32:40
+
+. 
+. 
+. // Question 2: Merge your data 
+. 
+. // a) Import your data Follow-up_interview_2.dta
+. use "data/source/Follow-up_interview_2.dta"
+
+. 
+. // b) Merge with allocation.dta 
+. merge 1:1 id using "data/source/allocation.dta", keep(match) nogenerate
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                                35  
+    -----------------------------------------
+
+. 
+. // Question 3: Reshape your data 
+. 
+. // a) What kind of format is this data in? (hint: is it long or wide?) 
+. * wide
+. 
+. // b) Reshape your data to long format generating a new variable called interview to indicat
+> e visit number (hint: think about what the stubs are here, which variables are recorded agai
+> n at follow up?) 
+. 
+. * there are a set of 01-12 GHQ questions, they are recorded at each followup
+. * note that after the reshape, the ID is no longer the primary key
+. 
+. #delim ;
+delimiter now ;
+. local GHQ 
+> GHQ_12_01 GHQ_12_02 GHQ_12_03 GHQ_12_04 GHQ_12_05 GHQ_12_06
+> GHQ_12_07 GHQ_12_08 GHQ_12_09 GHQ_12_10 GHQ_12_11 GHQ_12_12;
+
+. #delim cr
+delimiter now cr
+. 
+. reshape long interview_date `GHQ', i(id) j(interview)
+(j = 1 2)
+
+Data                               Wide   ->   Long
+-----------------------------------------------------------------------------
+Number of observations               35   ->   70          
+Number of variables                  33   ->   21          
+j variable (2 values)                     ->   interview
+xij variables:
+        interview_date1 interview_date2   ->   interview_date
+                  GHQ_12_011 GHQ_12_012   ->   GHQ_12_01
+                  GHQ_12_021 GHQ_12_022   ->   GHQ_12_02
+                  GHQ_12_031 GHQ_12_032   ->   GHQ_12_03
+                  GHQ_12_041 GHQ_12_042   ->   GHQ_12_04
+                  GHQ_12_051 GHQ_12_052   ->   GHQ_12_05
+                  GHQ_12_061 GHQ_12_062   ->   GHQ_12_06
+                  GHQ_12_071 GHQ_12_072   ->   GHQ_12_07
+                  GHQ_12_081 GHQ_12_082   ->   GHQ_12_08
+                  GHQ_12_091 GHQ_12_092   ->   GHQ_12_09
+                  GHQ_12_101 GHQ_12_102   ->   GHQ_12_10
+                  GHQ_12_111 GHQ_12_112   ->   GHQ_12_11
+                  GHQ_12_121 GHQ_12_122   ->   GHQ_12_12
+-----------------------------------------------------------------------------
+
+. 
+. // c) What do you notice about the variables that do not change over time? i.e. ethnicity, s
+> ex, dob, height and weight? Write as a comment in your do file 
+. 
+. * their values are duplicated across different observations for the same id
+. 
+. // Question 4: Formatting your data 
+. 
+. // a) We need to format the data as we did in earlier practical sessions. Copy sections of y
+> our code from practical 1 question 3 to format your string variables 
+. 
+. * format ethnicity
+. #delim ;
+delimiter now ;
+. label define label_ethnicity
+> 1 "White"
+> 2 "Black"
+> 3 "Asian"
+> 4 "Mixed" 
+> 5 "Other";
+
+. #delim cr
+delimiter now cr
+. 
+. encode ethnicity, generate(ethnicity_n) label(label_ethnicity)
+
+. drop ethnicity
+
+. rename ethnicity_n ethnicity
+
+. 
+. * format sex
+. label define label_sex 1 "Male" 2 "Female"
+
+. 
+. encode sex, generate(sex_n) label(label_sex)
+
+. drop sex
+
+. rename sex_n sex
+
+. 
+. 
+. // b) Generate bmi again using sections of your code from practical 1 question 4 (hint: make
+>  sure your missing values are recoded and your height is in metres) 
+. 
+. replace weight = . if inlist(weight, 777, 888, 999)
+(2 real changes made, 2 to missing)
+
+. replace height = . if inlist(height, 777, 888, 999)
+(2 real changes made, 2 to missing)
+
+. replace height = height / 100
+variable height was int now float
+(68 real changes made)
+
+. generate bmi = weight / (height ^ 2)
+(4 missing values generated)
+
+. 
+. // c) Format your missing data for interview_date
+. replace interview_date = . if interview_date == `=td(01jan1900)'
+(1 real change made, 1 to missing)
+
+. replace interview_date = . if interview_date == -21914
+(0 real changes made)
+
+. 
+. // d) As before, drop any participants who had an interview_date for interview 1 in December
+>  
+. drop if month(interview_date) == 12
+(2 observations deleted)
+
+. 
+. 
+. // e) Generate age using code from practical 2 question 4 
+. personage dob interview_date, gen(age_fi)
+(49 missing values generated)
+(48 real changes made)
+(0 real changes made)
+(0 real changes made)
+(1 missing value generated)
+
+. label variable age_fi "age at first interview"
+
+. 
+. 
+. // Question 5: Using loops  
+. 
+. // a) Previously we removed missing data codes from the GHQ-12 variable by variable. Can you
+>  use a loop to perform this task much more efficiently? (hint: remember the inlist command, 
+> this will make your code even more efficient) 
+. foreach v of local GHQ {
+  2.         replace `v' = . if inlist(`v', 777, 888, 999)
+  3. }
+(1 real change made, 1 to missing)
+(0 real changes made)
+(1 real change made, 1 to missing)
+(0 real changes made)
+(1 real change made, 1 to missing)
+(1 real change made, 1 to missing)
+(0 real changes made)
+(0 real changes made)
+(1 real change made, 1 to missing)
+(2 real changes made, 2 to missing)
+(1 real change made, 1 to missing)
+(1 real change made, 1 to missing)
+
+. 
+. // b) You have been asked by investigators to recode the GHQ-12 scoring from 1, 2, 3, 4 to 0
+> , 0, 1, 1 respectively. Use a loop and the recode command to do this (hint: (1 2 = 0) and (3
+>  4 = 1))
+. foreach v of local GHQ {
+  2.         recode `v' (1 2 = 0) (3 4 = 1)
+  3. }
+(49 changes made to GHQ_12_01)
+(50 changes made to GHQ_12_02)
+(52 changes made to GHQ_12_03)
+(49 changes made to GHQ_12_04)
+(48 changes made to GHQ_12_05)
+(52 changes made to GHQ_12_06)
+(50 changes made to GHQ_12_07)
+(51 changes made to GHQ_12_08)
+(54 changes made to GHQ_12_09)
+(53 changes made to GHQ_12_10)
+(51 changes made to GHQ_12_11)
+(49 changes made to GHQ_12_12)
+
+. 
+. // c) Now that you have recoded GHQ-12, copy over your code from practical 2 to score it aga
+> in (hint: egen) 
+. egen ghq_missing = rowmiss(`GHQ')
+
+. label variable ghq_missing "number of missing GHQ items"
+
+. 
+. egen ghq_total = rowtotal(`GHQ') if ghq_missing == 0
+(6 missing values generated)
+
+. label variable ghq_total "total GHQ score"
+
+. codebook ghq_total
+
+----------------------------------------------------------------------------------------------
+ghq_total                                                                      total GHQ score
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (float)
+
+                 Range: [0,9]                         Units: 1
+         Unique values: 10                        Missing .: 6/68
+
+                  Mean: 4.20968
+             Std. dev.: 2.06562
+
+           Percentiles:     10%       25%       50%       75%       90%
+                              2         3         4         5         7
+
+. 
+. ** extra
+. egen ghq_mean = rowmean(`GHQ') if ghq_missing == 0
+(6 missing values generated)
+
+. label variable ghq_mean "mean GHQ score"
+
+. codebook ghq_mean
+
+----------------------------------------------------------------------------------------------
+ghq_mean                                                                        mean GHQ score
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (float)
+
+                 Range: [0,.75]                       Units: 1.000e-09
+         Unique values: 10                        Missing .: 6/68
+
+                  Mean: .350806
+             Std. dev.: .172135
+
+           Percentiles:     10%       25%       50%       75%       90%
+                        .166667       .25   .333333   .416667   .583333
+
+. ** end of chunk
+. 
+. 
+. // Question 6: reproducibility of work  
+. 
+. // a) Save your modified dataset with the name follow_up.dta 
+. save "data/processed/follow_up.dta", replace
+(file data/processed/follow_up.dta not found)
+file data/processed/follow_up.dta saved
+
+. 
+. // b) Close your log file and have a look at it, it will be found where you specified your w
+> orking directory as a .smcl or.log file. 
+. log close
+      name:  <unnamed>
+       log:  C:\Users\Harris\projects\asmhi_programming\analysis/do/stata_practical_3.log
+  log type:  text
+ closed on:   6 Oct 2021, 21:32:40
+----------------------------------------------------------------------------------------------

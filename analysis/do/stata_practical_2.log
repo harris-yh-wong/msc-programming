@@ -1,0 +1,224 @@
+----------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\Harris\projects\asmhi_programming\analysis/do/stata_practical_2.log
+  log type:  text
+ opened on:   6 Oct 2021, 21:31:37
+
+. 
+. // d) Use mydata.dta from practical 1 
+. use "data/processed/my_data.dta"
+
+. 
+. // Question 2: Append with january_interview_1.dta 
+. 
+. // a) Use the append command to add the dataset january_interview_1.dta to your existing sav
+> ed dataset 
+. append using "data/source/january_interview_1.dta"
+(variable height was float, now double to accommodate using data's values)
+
+. 
+. // b) You will notice bmi isn't included in the new data. Use your code from practical 1 que
+> stion 4(i) to generate bmi again for all participants.  
+. 
+. * note that the heights and weights are already in the right format in the right new dataset
+. replace bmi = weight / (height ^ 2)
+(15 real changes made)
+
+. 
+. // c) Save your data as mydata2.dta 
+. save "data/processed/mydata2.dta", replace
+(file data/processed/mydata2.dta not found)
+file data/processed/mydata2.dta saved
+
+. 
+. // Question 3: Merge with allocation.dta 
+. 
+. // a) Open the allocation.dta dataset. You may wish to use the browse and codebook functions
+>  to explore what variables you have. Are there any variables in this dataset you do not need
+>  to merge with your existing dataset? 
+. use "data/source/allocation.dta"
+
+. describe
+
+Contains data from data/source/allocation.dta
+ Observations:            35                  
+    Variables:             3                  7 Aug 2019 15:13
+----------------------------------------------------------------------------------------------
+Variable      Storage   Display    Value
+    name         type    format    label      Variable label
+----------------------------------------------------------------------------------------------
+id              byte    %10.0g                id
+sex             str6    %9s                   sex
+treatment       byte    %10.0g                treatment
+----------------------------------------------------------------------------------------------
+Sorted by: 
+
+. * id is the primary key
+. * treatment does not exist in mydata2
+. * sex already eixsts in mydata2, no need to merge
+. 
+. // b) Open your saved dataset mydata2.dta 
+. 
+. use "data/processed/mydata2.dta"
+
+. describe
+
+Contains data from data/processed/mydata2.dta
+ Observations:            35                  
+    Variables:            20                  6 Oct 2021 21:31
+----------------------------------------------------------------------------------------------
+Variable      Storage   Display    Value
+    name         type    format    label      Variable label
+----------------------------------------------------------------------------------------------
+id              byte    %10.0g                id
+interview_date1 int     %td                   interview_date1
+dob             int     %td                   Date of Birth
+ethnicity       int     %10.0g     label_ethnicity
+                                              ethnicity
+weight          double  %10.0g                weight
+height          double  %10.0g                height
+GHQ_12_01       int     %10.0g                GHQ-12 question 1
+GHQ_12_02       byte    %10.0g                GHQ-12 question 2
+GHQ_12_03       int     %10.0g                GHQ-12 question 3
+GHQ_12_04       byte    %10.0g                GHQ-12 question 4
+GHQ_12_05       int     %10.0g                GHQ-12 question 5
+GHQ_12_06       int     %10.0g                GHQ-12 question 6
+GHQ_12_07       byte    %10.0g                GHQ-12 question 7
+GHQ_12_08       byte    %10.0g                GHQ-12 question 8
+GHQ_12_09       int     %10.0g                GHQ-12 question 9
+GHQ_12_10       int     %10.0g                GHQ-12 question 10
+GHQ_12_11       int     %10.0g                GHQ-12 question 11
+GHQ_12_12       int     %10.0g                GHQ-12 question 12
+sex             long    %8.0g      label_sex
+                                              sex
+bmi             float   %9.0g                 body-mass index
+----------------------------------------------------------------------------------------------
+Sorted by: 
+
+. 
+. // c) Use the merge command to merge this `master' dataset with the `using' dataset allocati
+> on.dta. Hint: You should use the help file to find an option where you can specify which var
+> iables you wish to merge
+. 
+. merge 1:1 id using "data/source/allocation.dta", keepusing(id treatment)
+
+    Result                      Number of obs
+    -----------------------------------------
+    Not matched                             0
+    Matched                                35  (_merge==3)
+    -----------------------------------------
+
+. browse
+
+. 
+. // d) Save your data as mydata2.dta. (Hint: remember to use the replace option)
+. save "data/processed/mydata2.dta", replace
+file data/processed/mydata2.dta saved
+
+. 
+. // Question 4: Dates  
+. 
+. // a) Replace any interview dates `01/01/1900' with `.'. (Hint: You could use the display da
+> te command to help you with this) 
+. 
+. * display date("01/01/1900", "MDY") /// -21914
+> * date is stored as int
+. replace interview_date1 = . if interview_date1 == `=td(01jan1900)'
+(1 real change made, 1 to missing)
+
+. replace interview_date1 = . if interview_date1 == -21914
+(0 real changes made)
+
+. 
+. // b) List participants id and interview date for those who have interviews in December. (Hi
+> nt: display date and inrange could help you with this) 
+. list id interview_date1 if month(interview_date1) == 12
+
+     +----------------+
+     | id   intervi~1 |
+     |----------------|
+  5. |  5   17dec2018 |
+ 11. | 14   01dec2018 |
+     +----------------+
+
+. 
+. // c) We do not want to include these participants in our analysis. Drop these participants 
+> from your dataset.
+. drop if month(interview_date1) == 12
+(2 observations deleted)
+
+. 
+. // d) Use the interview date and date of birth variables to generate a new variable `age at 
+> first interview'. Don't forget to label any new variables you create. 
+. 
+. personage dob interview_date1, gen(age_fi)
+(20 missing values generated)
+(19 real changes made)
+(0 real changes made)
+(0 real changes made)
+(1 missing value generated)
+
+. label variable age_fi "age at first interview"
+
+. * alternatively
+. *** generate age_fi = year(interview_date1) - year(dob)
+. 
+. /// Question 5: GHQ 12 
+> 
+. // a) Replace any GHQ items that have missing data codes `777', `888' or `999' with `.'. (Hi
+> nt: inlist could make your code more efficient) 
+. 
+. foreach v of varlist GHQ_12_01 - GHQ_12_12 {
+  2.         replace `v' = . if inlist(`v', 777, 888, 999)
+  3. }
+(1 real change made, 1 to missing)
+(0 real changes made)
+(1 real change made, 1 to missing)
+(0 real changes made)
+(1 real change made, 1 to missing)
+(1 real change made, 1 to missing)
+(0 real changes made)
+(0 real changes made)
+(1 real change made, 1 to missing)
+(2 real changes made, 2 to missing)
+(1 real change made, 1 to missing)
+(1 real change made, 1 to missing)
+
+. *! How do I select these columns more generally with regex?
+. 
+. // b) Use the egen command to generate a variable called `ghq_missing' which will contain th
+> e number of missing GHQ items for each participant. Don't forget to label any new variables 
+> you create. 
+. egen ghq_missing = rowmiss(GHQ_12_01 - GHQ_12_12)
+
+. label variable ghq_missing "number of missing GHQ items"
+
+. 
+. // c) Use the egen command to generate a variable called `ghq_total' which will contain the 
+> total GHQ 12 score for those who had no missing items. Don't forget to label any new variabl
+> es you create. (hint: if ghq_missing==0) 
+. egen ghq_total = rowtotal(GHQ_12_01 - GHQ_12_12) if ghq_missing == 0
+(6 missing values generated)
+
+. label variable ghq_total "total GHQ score"
+
+. browse
+
+. * for reference, the GHQ total ranges from 0 to 36, with higher scores indiating worse condi
+> tions
+. 
+. // Question 6: reproducibility of work  
+. 
+. // d) Save your modified dataset with the name mydata2.dta 
+. save "data/processed/mydata2.dta", replace
+file data/processed/mydata2.dta saved
+
+. 
+. // e) Close your log file and have a look at it, it will be found where you specified your w
+> orking directory as a .smcl or.log file. 
+. log close
+      name:  <unnamed>
+       log:  C:\Users\Harris\projects\asmhi_programming\analysis/do/stata_practical_2.log
+  log type:  text
+ closed on:   6 Oct 2021, 21:31:38
+----------------------------------------------------------------------------------------------

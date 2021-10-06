@@ -1,0 +1,609 @@
+----------------------------------------------------------------------------------------------
+      name:  <unnamed>
+       log:  C:\Users\Harris\projects\asmhi_programming\analysis/do/stata_practical_1.log
+  log type:  text
+ opened on:   6 Oct 2021, 21:29:20
+
+. 
+. // Question 2: Get to know your data 
+. 
+. // a) Import your data 
+. import excel "data/source/November_interview_1.xlsx", firstrow
+(19 vars, 20 obs)
+
+. * first row as feature names
+. 
+. // b) Use the codebook command to have a look at the variables. Write as a comment in your d
+> o file which variables are string. 
+. 
+. codebook
+
+----------------------------------------------------------------------------------------------
+id                                                                                          id
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (byte)
+
+                 Range: [1,24]                        Units: 1
+         Unique values: 20                        Missing .: 0/20
+
+                  Mean:   12.5
+             Std. dev.: 7.5568
+
+           Percentiles:    10%       25%       50%       75%       90%
+                           2.5       5.5      13.5        19      22.5
+
+----------------------------------------------------------------------------------------------
+interview_date1                                                                interview_date1
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric daily date (int)
+
+                 Range: [-21914,21535]                Units: 1
+       Or equivalently: [01jan1900,17dec2018]         Units: days
+         Unique values: 16                        Missing .: 0/20
+
+                  Mean: 19331.8 = 04dec2012(+ 20 hours)
+             Std. dev.: 9708.27
+           Percentiles:       10%        25%        50%        75%        90%
+                            21489    21491.5      21498    21509.5    21518.5
+                        01nov2018  03nov2018  10nov2018  21nov2018  30nov2018
+
+----------------------------------------------------------------------------------------------
+dob                                                                                        dob
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric daily date (int)
+
+                 Range: [5009,14950]                  Units: 1
+       Or equivalently: [18sep1973,06dec2000]         Units: days
+         Unique values: 20                        Missing .: 0/20
+
+                  Mean: 11294.7 = 03dec1990(+ 17 hours)
+             Std. dev.: 2845.22
+           Percentiles:       10%        25%        50%        75%        90%
+                             7317     9124.5    11785.5      13491    14514.5
+                        13jan1980  24dec1984  07apr1992  08dec1996  27sep1999
+
+----------------------------------------------------------------------------------------------
+ethnicity                                                                            ethnicity
+----------------------------------------------------------------------------------------------
+
+                  Type: String (str5)
+
+         Unique values: 6                         Missing "": 0/20
+
+            Tabulation: Freq.  Value
+                            1  "888"
+                            5  "Asian"
+                            4  "Black"
+                            4  "Mixed"
+                            2  "Other"
+                            4  "White"
+
+----------------------------------------------------------------------------------------------
+sex                                                                                        sex
+----------------------------------------------------------------------------------------------
+
+                  Type: String (str6)
+
+         Unique values: 2                         Missing "": 0/20
+
+            Tabulation: Freq.  Value
+                           10  "Female"
+                           10  "Male"
+
+----------------------------------------------------------------------------------------------
+weight                                                                                  weight
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (double)
+
+                 Range: [65.3,999]                    Units: .1
+         Unique values: 20                        Missing .: 0/20
+
+                  Mean:  124.06
+             Std. dev.: 206.065
+
+           Percentiles:     10%       25%       50%       75%       90%
+                          68.85     71.95      78.8     84.65     89.75
+
+----------------------------------------------------------------------------------------------
+height                                                                                  height
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [160,777]                     Units: 1
+         Unique values: 16                        Missing .: 0/20
+
+                  Mean:   200.1
+             Std. dev.: 136.015
+
+           Percentiles:     10%       25%       50%       75%       90%
+                          160.5     162.5       169       177     183.5
+
+----------------------------------------------------------------------------------------------
+GHQ_12_01                                                                            GHQ_12_01
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [0,888]                       Units: 1
+         Unique values: 5                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            6  0
+                            2  1
+                            4  2
+                            7  3
+                            1  888
+
+----------------------------------------------------------------------------------------------
+GHQ_12_02                                                                            GHQ_12_02
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (byte)
+
+                 Range: [0,3]                         Units: 1
+         Unique values: 4                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            7  0
+                            2  1
+                            3  2
+                            8  3
+
+----------------------------------------------------------------------------------------------
+GHQ_12_03                                                                            GHQ_12_03
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [0,777]                       Units: 1
+         Unique values: 5                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            4  0
+                            4  1
+                            5  2
+                            6  3
+                            1  777
+
+----------------------------------------------------------------------------------------------
+GHQ_12_04                                                                            GHQ_12_04
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (byte)
+
+                 Range: [0,3]                         Units: 1
+         Unique values: 4                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            9  0
+                            3  1
+                            2  2
+                            6  3
+
+----------------------------------------------------------------------------------------------
+GHQ_12_05                                                                            GHQ_12_05
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [0,999]                       Units: 1
+         Unique values: 4                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            6  0
+                            4  2
+                            9  3
+                            1  999
+
+----------------------------------------------------------------------------------------------
+GHQ_12_06                                                                            GHQ_12_06
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [0,777]                       Units: 1
+         Unique values: 5                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            7  0
+                            6  1
+                            2  2
+                            4  3
+                            1  777
+
+----------------------------------------------------------------------------------------------
+GHQ_12_07                                                                            GHQ_12_07
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (byte)
+
+                 Range: [0,3]                         Units: 1
+         Unique values: 4                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            9  0
+                            3  1
+                            1  2
+                            7  3
+
+----------------------------------------------------------------------------------------------
+GHQ_12_08                                                                            GHQ_12_08
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (byte)
+
+                 Range: [0,3]                         Units: 1
+         Unique values: 4                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            6  0
+                            1  1
+                            4  2
+                            9  3
+
+----------------------------------------------------------------------------------------------
+GHQ_12_09                                                                            GHQ_12_09
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [0,888]                       Units: 1
+         Unique values: 5                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            5  0
+                            1  1
+                            4  2
+                            9  3
+                            1  888
+
+----------------------------------------------------------------------------------------------
+GHQ_12_10                                                                            GHQ_12_10
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [0,888]                       Units: 1
+         Unique values: 6                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            3  0
+                            1  1
+                            6  2
+                            8  3
+                            1  777
+                            1  888
+
+----------------------------------------------------------------------------------------------
+GHQ_12_11                                                                            GHQ_12_11
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [0,777]                       Units: 1
+         Unique values: 5                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            7  0
+                            1  1
+                            3  2
+                            8  3
+                            1  777
+
+----------------------------------------------------------------------------------------------
+GHQ_12_12                                                                            GHQ_12_12
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (int)
+
+                 Range: [0,777]                       Units: 1
+         Unique values: 4                         Missing .: 0/20
+
+            Tabulation: Freq.  Value
+                            6  0
+                            7  1
+                            6  3
+                            1  777
+
+. * the following variables are string
+. * ds, has(type string)
+. * ethnicity  sex
+. 
+. // c) Label the variable dob with "Date of Birth" to make understanding easier 
+. label variable dob "Date of Birth"
+
+. 
+. // d) Label all the GHQ-12 variables such as GHQ_12_01 with "GHQ-12 question 1" 
+. 
+. foreach var of varlist GHQ_12_01 - GHQ_12_12 {
+  2.         label variable `var' "GHQ-12 question `=real(substr("`var'",8,9))'"
+  3. }
+
+. 
+. 
+. 
+. 
+. // Question 3: Format your data 
+. 
+. 
+. 
+. // a) Replace the ethnicity variable with the following codes: 1=White, 2=Black, 3=Asian, 4=
+>  Mixed and 5=Other (hint as this is a string variable, what you replace it with must also be
+>  string) 
+. 
+. replace ethnicity = "1" if ethnicity == "White"
+(4 real changes made)
+
+. replace ethnicity = "2" if ethnicity == "Black"
+(4 real changes made)
+
+. replace ethnicity = "3" if ethnicity == "Asian"
+(5 real changes made)
+
+. replace ethnicity = "4" if ethnicity == "Mixed"
+(4 real changes made)
+
+. replace ethnicity = "5" if ethnicity == "Other"
+(2 real changes made)
+
+. 
+. 
+. // b) Destring ethnicity so that it is a numeric variable 
+. destring ethnicity, replace
+ethnicity: all characters numeric; replaced as int
+
+. 
+. // c) Browse your data, what do you notice about this numeric variable compared to sex which
+>  is a string variable? Write as a comment in your do file.
+. browse ethnicity sex
+
+. * different text colour
+. 
+. // d) Label the ethnicity variable with the codes you replaced with. 
+. 
+. #delim ;
+delimiter now ;
+. label define label_ethnicity
+> 1 "White"
+> 2 "Black"
+> 3 "Asian"
+> 4 "Mixed" 
+> 5 "Other";
+
+. #delim cr
+delimiter now cr
+. 
+. label value ethnicity label_ethnicity
+
+. 
+. // ALTERNATIVELY, parts (a) to (d) can be summarised as:
+. *** encode ethnicity, generate(ethnicity_n) label(label_ethnicity)
+. *** drop ethnicity
+. *** rename ethnicity_n ethnicity
+. 
+. 
+. // e) Browse your data, what do you notice about the labelled numeric ethnicity data compare
+> d to sex which is a string variable? Write as a comment in your do file. 
+. browse ethnicity sex
+
+. * different text color. Label values are displayed instead of the key
+. 
+. // f) Repeat this process for sex with 1=Male and 2=Female 
+. 
+. label define label_sex 1 "Male" 2 "Female"
+
+. 
+. encode sex, generate(sex_n) label(label_sex)
+
+. drop sex
+
+. rename sex_n sex
+
+. 
+. browse ethnicity sex
+
+. 
+. // Question 4: Generate a variable 
+. 
+. // a) BMI = weight/(height)^2, generate a variable called bmi using this formula 
+. generate bmi = weight / (height ^ 2)
+
+. 
+. // b) Use the codebook command to look at the variable you have generated 
+. codebook bmi
+
+----------------------------------------------------------------------------------------------
+bmi                                                                                (unlabeled)
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (float)
+
+                 Range: [.00013251,.03669421]         Units: 1.000e-11
+         Unique values: 20                        Missing .: 0/20
+
+                  Mean: .004265
+             Std. dev.: .007656
+
+           Percentiles:     10%       25%       50%       75%       90%
+                        .002452   .002567    .00269   .002789    .00297
+
+. 
+. // c) BMI should always be greater than 1, clearly something is not right here 
+. 
+. // d) View your data in Stata and see if you can see any issues 
+. 
+. 
+. // e) An issue in the calculation is the missing date codes. List id and weight if weight = 
+> 777 or weight = 888 or weight = 999 
+. list id weight if inlist(weight, 777, 888, 999)
+
+     +-------------+
+     | id   weight |
+     |-------------|
+  3. |  3      999 |
+     +-------------+
+
+. 
+. // f) Replace weight = . if weight =777 or 888 or 999 
+. replace weight = . if inlist(weight, 777, 888, 999)
+(1 real change made, 1 to missing)
+
+. 
+. // g) Do the same for height
+. replace height = . if inlist(height, 777, 888, 999)
+(1 real change made, 1 to missing)
+
+. 
+. // h) Another issue is that height must be metres for this formula to work. Replace height= 
+> height/100 in order to convert these heights to metres 
+. replace height = height / 100
+variable height was int now float
+(19 real changes made)
+
+. 
+. // i) Generate bmi again using the same formula (hint: remember you will need to drop the ol
+> d incorrect variable called bmi) 
+. 
+. replace bmi = weight / (height ^ 2)
+(20 real changes made, 2 to missing)
+
+. 
+. 
+. // j) Use the codebook command to check that bmi now looks sensible. Remember to label any n
+> ew variables you generate. 
+. label variable bmi "body-mass index"
+
+. codebook bmi
+
+----------------------------------------------------------------------------------------------
+bmi                                                                            body-mass index
+----------------------------------------------------------------------------------------------
+
+                  Type: Numeric (float)
+
+                 Range: [24.147728,30.15625]          Units: 1.000e-06
+         Unique values: 18                        Missing .: 2/20
+
+                  Mean:  26.935
+             Std. dev.: 1.55842
+
+           Percentiles:     10%       25%       50%       75%       90%
+                        24.9022   25.8291   26.8959    27.298   29.2378
+
+. 
+. // Question 5: exploring the data  
+. 
+. // a) Browse the data for all females (hint: remember you have already recoded the sex varia
+> ble to female = 2) 
+. browse if sex == 2
+
+. 
+. // b) List id sex and bmi if bmi is greater than 25 and the participants are female 
+. list id sex bmi if bmi > 25 & sex == 2
+
+     +------------------------+
+     | id      sex        bmi |
+     |------------------------|
+  2. |  2   Female   27.08229 |
+  3. |  3   Female          . |
+  7. |  7   Female   26.67296 |
+  8. |  9   Female   25.50781 |
+ 10. | 13   Female   26.82518 |
+     |------------------------|
+ 14. | 17   Female   26.96655 |
+ 19. | 23   Female   30.15625 |
+ 20. | 24   Female   25.51846 |
+     +------------------------+
+
+. 
+. // c) Do the same for if participants are male 
+. list id sex bmi if bmi > 25 & sex == 1
+
+     +----------------------+
+     | id    sex        bmi |
+     |----------------------|
+  1. |  1   Male   27.29796 |
+  4. |  4   Male   26.45062 |
+  5. |  5   Male   29.23783 |
+  6. |  6   Male   25.82907 |
+  9. | 10   Male   27.06916 |
+     |----------------------|
+ 11. | 14   Male   27.20082 |
+ 12. | 15   Male   29.19184 |
+ 15. | 18   Male   26.29556 |
+ 16. | 20   Male   28.47751 |
+ 18. | 22   Male          . |
+     +----------------------+
+
+. 
+. // d) What do you notice about the list for males compared to the list for females? Can you 
+> recall from the lecture why this is happening? Write this as a comment in your do file. 
+. * include missing values (anything else?)
+. 
+. // e) Can you think how you would overcome this? Have a go at writing some code so that the 
+> missing values are not included 
+. list id sex bmi if bmi>25 & bmi != . & sex == 2
+
+     +------------------------+
+     | id      sex        bmi |
+     |------------------------|
+  2. |  2   Female   27.08229 |
+  7. |  7   Female   26.67296 |
+  8. |  9   Female   25.50781 |
+ 10. | 13   Female   26.82518 |
+ 14. | 17   Female   26.96655 |
+     |------------------------|
+ 19. | 23   Female   30.15625 |
+ 20. | 24   Female   25.51846 |
+     +------------------------+
+
+. list id sex bmi if bmi>25 & bmi != . & sex == 1
+
+     +----------------------+
+     | id    sex        bmi |
+     |----------------------|
+  1. |  1   Male   27.29796 |
+  4. |  4   Male   26.45062 |
+  5. |  5   Male   29.23783 |
+  6. |  6   Male   25.82907 |
+  9. | 10   Male   27.06916 |
+     |----------------------|
+ 11. | 14   Male   27.20082 |
+ 12. | 15   Male   29.19184 |
+ 15. | 18   Male   26.29556 |
+ 16. | 20   Male   28.47751 |
+     +----------------------+
+
+. 
+. ** alternatives
+. *** !missing(bmi)
+. *** bmi != .
+. 
+. // Question 6: reproducibility of work  
+. 
+. // a) Save your modified dataset with the name my_data.dta 
+. save "data/processed/my_data.dta", replace
+(file data/processed/my_data.dta not found)
+file data/processed/my_data.dta saved
+
+. 
+. // b) Close your log file and have a look at it, it will be found where you specified your w
+> orking directory as a .smcl or .log file. 
+. 
+. 
+. // c) You may wish to run your whole do file again so that you have a clean log file showing
+>  everything you have done (hint: you will need the replace option when opening your log file
+>  at the start of the do file if you wish to rerun and replace with a clean version) 
+. 
+. // end
+. log close
+      name:  <unnamed>
+       log:  C:\Users\Harris\projects\asmhi_programming\analysis/do/stata_practical_1.log
+  log type:  text
+ closed on:   6 Oct 2021, 21:29:21
+----------------------------------------------------------------------------------------------
