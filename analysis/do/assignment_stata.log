@@ -1,21 +1,19 @@
---------------------------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------
       name:  <unnamed>
        log:  C:\Users\Harris\projects\asmhi_programming\analysis/do/assignment_stata.log
   log type:  text
- opened on:   6 Oct 2021, 21:43:48
+ opened on:   8 Oct 2021, 11:12:30
 
 . 
 . // 1 The Titanic Analysis
 . 
 . // 1.1. First, import the titanic spend.xlsx data.
-. 
-. 
 . import excel "data/source/titanic_spend.xlsx", firstrow
 (5 vars, 3,628 obs)
 
 . 
-. // 1.2. In the next question we will want to merge this dataset with titanic main.dta which is in wide format, reshape your loaded dataset in order to
->  make a 1:1 merge possible. 
+. // 1.2. In the next question we will want to merge this dataset with titanic main.dta which 
+> is in wide format, reshape your loaded dataset in order to make a 1:1 merge possible. 
 . // Hint: you should end up with four daily spend variables, one for each day.
 . reshape wide daily_spend, i(id) j(day)
 (j = 1 2 3 4)
@@ -40,17 +38,17 @@ xij variables:
     -----------------------------------------
 
 . 
-. // 1.4. Generate a new variable called fare_round which will round the fare to the nearest penny and label this variable
+. // 1.4. Generate a new variable called fare_round which will round the fare to the nearest p
+> enny and label this variable
 . generate fare_round = round(fare, 0.01)
 
-. label variable fare_round "fare rounded to the nearest penny"
+. label variable fare_round "Fare rounded to the nearest penny"
 
 . 
-. // 1.5. Create a new variable called date_purchased2 which is date_purchased as a numerical date (i.e. number of days since 01Jan1960). Format this to
->  be displayed as 01Jan1960.
+. // 1.5. Create a new variable called date_purchased2 which is date_purchased as a numerical 
+> date (i.e. number of days since 01Jan1960). Format this to be displayed as 01Jan1960.
 . generate date_purchased2 = date(date_purchased, "DMY")
 
-. 
 . 
 . 
 . *! Interpretations!!!!
@@ -70,7 +68,8 @@ survived |      Mean        SD
 ------------------------------
 
 . 
-. // 1.7. Use the tabulate command in order to compare percentage of those survived by class *.
+. // 1.7. Use the tabulate command in order to compare percentage of those survived by class *
+> .
 . tabulate survived class, cell
 
 +-----------------+
@@ -93,7 +92,8 @@ survived |      Mean        SD
            |     24.35      20.74      54.90 |    100.00 
 
 . 
-. // 1.8. Calculate the minimum, maximum, inter quartile range (IQR) and median fare by class *.
+. // 1.8. Calculate the minimum, maximum, inter quartile range (IQR) and median fare by class 
+> *.
 . tabstat fare, by(class) statistics(min max iqr median)
 
 Summary for variables: fare
@@ -109,19 +109,16 @@ Group variable: class (Class of ticket)
 --------------------------------------------------
 
 . 
-. 
-. 
-. 
-. 
 . // 1.9. Generate a variable which contains the row mean for the daily_spend variables.
 . local daily_spends daily_spend1 daily_spend2 daily_spend3 daily_spend4
 
 . egen spends_mean = rowmean(`daily_spends')
 
-. label variable spends_mean "mean daily spends"
+. label variable spends_mean "Mean daily spends"
 
 . 
-. // 1.10. Use a loop to replace any missing values in the daily spend variables with the row mean.
+. // 1.10. Use a loop to replace any missing values in the daily spend variables with the row 
+> mean.
 . foreach v of local daily_spends {
   2.         replace `v' = spends_mean if `v' == .
   3. }
@@ -130,29 +127,70 @@ Group variable: class (Class of ticket)
 (42 real changes made)
 (35 real changes made)
 
-. browse `daily_spends' spends_mean
+. 
+. // 1.11. Generate a variable indicating the number of people per cabin.
+. bysort cabinnumber: generate n_ppl_per_cabin = _N
 
-. describe `daily_spends' spends_mean
-
-Variable      Storage   Display    Value
-    name         type    format    label      Variable label
---------------------------------------------------------------------------------------------------------------------------------------------------------
-daily_spend1    double  %10.0g                1 daily_spend
-daily_spend2    double  %10.0g                2 daily_spend
-daily_spend3    double  %10.0g                3 daily_spend
-daily_spend4    double  %10.0g                4 daily_spend
-spends_mean     float   %9.0g                 mean daily spends
+. label variable n_ppl_per_cabin "Number of people per cabin"
 
 . 
-. /*
-> 
-> // 1.11. Generate a variable indicating the number of people per cabin.
-> 
-> // 1.12. Produce a scatter graph for daily_spend against age for each day. Include a line-of-best-fit for each day. Add a title. Remove the legend. Ma
-> ke sure you save each graph.
-> 
-> 
+. 
+. // 1.12. Produce a scatter graph for daily_spend against age for each day. Include a line-of
+> -best-fit for each day. Add a title. Remove the legend. Make sure you save each graph.
+. 
+. reshape long daily_spend, i(id) j(day)
+(j = 1 2 3 4)
 
+Data                               Wide   ->   Long
+-----------------------------------------------------------------------------
+Number of observations              887   ->   3,548       
+Number of variables                  20   ->   18          
+j variable (4 values)                     ->   day
+xij variables:
+daily_spend1 daily_spend2 ... daily_spend4->   daily_spend
+-----------------------------------------------------------------------------
+
+. label variable daily_spend "Daily spending"
+
+. twoway (scatter daily_spend age) (lfit daily_spend age), ///
+>         /// title("Scatter of daily spend against age for each day among passengers of Titan
+> ic") ///
+>         by(day, total legend(off))
+
+. 
+. * use graph combine
+. 
+. 
+. 
+end of do-file
+
+. browse in 1
+
+. do "C:\Users\Harris\AppData\Local\Temp\STD4fd0_000000.tmp"
+
+. twoway (scatter daily_spend age) (lfit daily_spend age), ///
+>         /// title("Scatter of daily spend against age for each day among passengers of Titan
+> ic") ///
+>         ytitle(Daily spending)
+
+.         by(day, total legend(off))
+: required
+r(100);
+
+end of do-file
+
+r(100);
+
+. do "C:\Users\Harris\AppData\Local\Temp\STD4fd0_000000.tmp"
+
+. 
+. twoway (scatter daily_spend age) (lfit daily_spend age), ///
+>         /// title("Scatter of daily spend against age for each day among passengers of Titan
+> ic") ///
+>         ytitle(Daily spending) ///
+>         by(day, total legend(off))
+
+. 
 end of do-file
 
 . exit, clear
