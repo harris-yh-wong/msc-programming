@@ -21,7 +21,7 @@ suppressPackageStartupMessages(library(knitr))
 
 ## 1.1
 ```{r}
-file <- here("data", "ESS.sav")
+file <- here("data", "source", "ESS.sav")
 ess_raw <- haven::read_sav(file)
 ```
 
@@ -147,13 +147,13 @@ head(bycountry)
 
 ## 1.12
 ```{r}
-load(here("data", "health.Rdata"))
+load(here("data", "source", "health.Rdata"))
 
 health_long <- health %>%
         pivot_longer(cols = -measure,
                      names_to = "cntry") %>%
         tidyr::separate(measure,
-                        into = c(NA, "feature", "year"),
+                        into = c(NA, "feature", "year"), # drop the first name
                         sep = "_") %>%
         pivot_wider(names_from = "feature",
                     values_from = "value") %>%
@@ -167,7 +167,7 @@ head(health_long)
 year_of_collection <- 2004
 
 merged <- health_long %>% 
-        filter(year == year_of_collection) %>% 
+        filter(year == year_of_collection) %>% # filter for the year of collection only
         select(-year) %>% 
         full_join(bycountry, by = c("cntry" = "country"))
 
